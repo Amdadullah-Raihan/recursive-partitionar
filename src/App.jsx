@@ -1,7 +1,18 @@
 import { useState } from "react";
 
+// Utility function to generate a random color
+const getRandomColor = () => {
+  const letters = "0123456789ABCDEF";
+  let color = "#";
+  for (let i = 0; i < 6; i++) {
+    color += letters[Math.floor(Math.random() * 16)];
+  }
+  return color;
+};
+
 const SplitDiv = ({ id }) => {
   const [split, setSplit] = useState(null);
+  const [bgColor] = useState(getRandomColor()); // Set random background color on mount
 
   const handleVerticalSplit = () => setSplit("vertical");
   const handleHorizontalSplit = () => setSplit("horizontal");
@@ -31,7 +42,10 @@ const SplitDiv = ({ id }) => {
 
   // Default state with buttons
   return (
-    <div className="flex items-center justify-center h-full w-full border border-gray-300 relative">
+    <div
+      className="flex items-center justify-center h-full w-full border border-gray-300 relative"
+      style={{ backgroundColor: bgColor }}
+    >
       <div className="space-x-4">
         <button
           onClick={handleVerticalSplit}
