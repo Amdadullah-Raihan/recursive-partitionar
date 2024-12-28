@@ -1,73 +1,76 @@
 import { useState } from "react";
-
-// Utility function to generate a random color
-const getRandomColor = () => {
-  const letters = "0123456789ABCDEF";
-  let color = "#";
-  for (let i = 0; i < 6; i++) {
-    color += letters[Math.floor(Math.random() * 16)];
-  }
-  return color;
-};
-
-const SplitDiv = ({ id }) => {
-  const [split, setSplit] = useState(null);
-  const [bgColor] = useState(getRandomColor()); // Set random background color on mount
-
-  const handleVerticalSplit = () => setSplit("vertical");
-  const handleHorizontalSplit = () => setSplit("horizontal");
-
-  // Render based on the split state
-  if (split === "vertical") {
-    return (
-      <div className="flex h-full w-full">
-        <SplitDiv id={`${id}-1`} />
-        <SplitDiv id={`${id}-2`} />
-      </div>
-    );
-  }
-
-  if (split === "horizontal") {
-    return (
-      <div className="h-full w-full">
-        <div className="h-1/2 w-full">
-          <SplitDiv id={`${id}-1`} />
-        </div>
-        <div className="h-1/2 w-full">
-          <SplitDiv id={`${id}-2`} />
-        </div>
-      </div>
-    );
-  }
-
-  // Default state with buttons
-  return (
-    <div
-      className="flex items-center justify-center h-full w-full border border-gray-300 relative"
-      style={{ backgroundColor: bgColor }}
-    >
-      <div className="space-x-4">
-        <button
-          onClick={handleVerticalSplit}
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-        >
-          V
-        </button>
-        <button
-          onClick={handleHorizontalSplit}
-          className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
-        >
-          H
-        </button>
-      </div>
-    </div>
-  );
-};
+import getRandomColor from "./utils/getRandomColor";
+import SplitDiv from "./pages/SplitDiv";
 
 const App = () => {
+  const [partitions, setPartitions] = useState({
+    id: "root",
+    children: [],
+    bgColor: getRandomColor(),
+  });
+
+  // We should delete the parent while deleting the last child
+
+  // Function for adding/removing a partition
+  const updatePartition = (id, newChildren, splitType = null) => {
+    // console.log("Node to be updated or deleted:", id);
+
+    const update = (partition) => {
+      if (!partition) return null;
+
+      // console.log("Processing partition:", partition);
+
+      // If the partition ID matches
+      if (partition.id === id) {
+        if (newChildren === null) {
+          // Handle removal
+          // console.log("Deleting partition:", partition);
+          return null; // Remove the partition entirely
+        } else {
+          // Update partition with new children
+          return { ...partition, children: newChildren, split: splitType };
+        }
+      }
+
+      // Process children recursively
+      if (partition.children?.length > 0) {
+        const updatedChildren = partition.children.map(update).filter(Boolean); // Filter out null values (deleted children)
+
+        // console.log("Updated children for partition:", updatedChildren);
+
+        // If all children are deleted, remove this partition as well
+        if (updatedChildren.length === 0) {
+          // console.log("No children left. Removing partition:", partition);
+          return null;
+        }
+
+        // Otherwise, return the partition with updated children
+        return { ...partition, children: updatedChildren };
+      }
+
+      return partition; // Return the partition if no changes
+    };
+
+    const updatedPartitions = update(partitions);
+
+    setPartitions(
+      updatedPartitions || {
+        id: "root",
+        children: [],
+        bgColor: getRandomColor(),
+      }
+    );
+  };
+
+  // console.log("partitions: ", partitions);
+
   return (
-    <div className="h-screen w-screen overflow-hidden relative">
-      <SplitDiv id="root" />
+    <div className="w-full h-screen overflow-hidden select-none ">
+      <SplitDiv
+        id={partitions.id}
+        partition={partitions}
+        updatePartition={updatePartition}
+      />
     </div>
   );
 };
